@@ -1,15 +1,17 @@
 
 using System;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using platformservice.repository;
 
 namespace platformservice.controllers
 {
-   
+
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "Admin")]
     public class PlatformController : ControllerBase
     {
         private readonly IPlatformRepo _repo;
@@ -19,14 +21,15 @@ namespace platformservice.controllers
             _repo = repo;
             _mapper = mapper;
         }
-        
+
         [Route("GetPlatforms")]
         [HttpGet]
         public IActionResult GetPlatforms()
         {
-           var platforms= _repo.GetPlatforms();
-           var platformResponse= _mapper.Map<IEnumerable<platformservice.viewmodels.PlatformResponse>>(platforms);
-           return Ok(platformResponse);
+            //throw new Exception("Custom test error");
+            var platforms = _repo.GetPlatforms();
+            var platformResponse = _mapper.Map<IEnumerable<platformservice.viewmodels.PlatformResponse>>(platforms);
+            return Ok(platformResponse);
         }
 
         [Route("CreatePlatform")]
@@ -35,7 +38,7 @@ namespace platformservice.controllers
         {
             var platformModel = _mapper.Map<platformservice.models.platform>(platformRequest);
             var result = _repo.AddPlatform(platformModel);
-            if(result)
+            if (result)
             {
                 return Ok();
             }
@@ -44,7 +47,20 @@ namespace platformservice.controllers
                 return BadRequest();
             }
         }
+
+        [Route("GetPlatformById/{id}")]
+        [HttpGet]
+        public async Task<IActionResult> GetPlatformById(int id)
+        {
+            var platform= await _repo.GetByIdAsync(id);
+            if (platform == null)
+            {
+                return NotFound();
+            }
+            var platformResponse=_mapper.Map<platformservice.viewmodels.PlatformResponse>(platform);
+            return Ok(platformResponse);
+        }
     }
-   
+
 
 }

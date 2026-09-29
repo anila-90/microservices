@@ -6,6 +6,8 @@ namespace platformservice.repository
     {
         IEnumerable<platform> GetPlatforms();
 
+        Task<platform> GetByIdAsync(int id);
+
         public bool AddPlatform(platform platform);
        
     }
