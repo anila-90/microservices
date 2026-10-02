@@ -1,0 +1,6 @@
+# Ignore the build output directory
+bin/
+obj/
+*.exe
+.vs/
+

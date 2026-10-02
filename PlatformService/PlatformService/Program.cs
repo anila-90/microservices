@@ -4,8 +4,10 @@ using platformservice.models;
 using platformservice.repository;
 using platformservice.middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +16,16 @@ var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("rate-limit",options=>
+
+    {
+        options.PermitLimit= 10;
+        options.Window= TimeSpan.FromSeconds(5);
+    }
+    );
+});
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecific",
@@ -39,7 +51,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidateAudience= true,
         ValidateLifetime = true
     };
-});
+})
+;
 
 builder.Services.AddAuthorization();
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -59,10 +72,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 //app.UseHttpsRedirection();
+app.UseRouting();
+app.UseCors("AllowSpecific");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseCors("AllowSpecific");
+
 app.MapControllers();
 
 PrepDb.PrepareDb(app);

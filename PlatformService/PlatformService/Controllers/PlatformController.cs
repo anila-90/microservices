@@ -4,12 +4,14 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using platformservice.repository;
 
 namespace platformservice.controllers
 {
 
     [ApiController]
+    [EnableRateLimiting("rate-limit")]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin")]
     public class PlatformController : ControllerBase
@@ -34,13 +36,13 @@ namespace platformservice.controllers
 
         [Route("CreatePlatform")]
         [HttpPost]
-        public IActionResult CreatePlatform(platformservice.viewmodels.PlatformRequest platformRequest)
+        public IActionResult CreatePlatform([FromBody]platformservice.viewmodels.PlatformRequest platformRequest)
         {
             var platformModel = _mapper.Map<platformservice.models.platform>(platformRequest);
             var result = _repo.AddPlatform(platformModel);
             if (result)
             {
-                return Ok();
+                return CreatedAtRoute("GetPlatformById", new { id = platformModel.Id },platformRequest);
             }
             else
             {
@@ -48,7 +50,7 @@ namespace platformservice.controllers
             }
         }
 
-        [Route("GetPlatformById/{id}")]
+        [Route("GetPlatformById/{id}",Name ="GetPlatformById")]
         [HttpGet]
         public async Task<IActionResult> GetPlatformById(int id)
         {

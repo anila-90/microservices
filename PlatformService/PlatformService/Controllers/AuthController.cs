@@ -21,7 +21,7 @@ namespace platformservice.controllers
         }
         
         [HttpPost("login")]
-        public IActionResult Login([FromBody]AuthRequest request)
+        public IActionResult Login(AuthRequest request)
         {
             if (request.UserName != "test" || request.Password != "test")
             {
